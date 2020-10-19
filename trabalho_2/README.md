@@ -2,45 +2,62 @@
 
 ### Gramática utilizada
 
-atribuição
-A -> id { Print(id); } = E { Print("="); } | P
+*atribuição*
 
-operadores (com precedência)
+```
+A -> id { Print(id); } = E { Print("="); }
+	| print { Print("print #");} F
+```
+
+*operadores (com precedência)*
+
+```
 E -> E + T { Print("+"); }
    | E - T { Print("-"); }
    | T
 T -> T * F { Print("*"); }
    | T / F { Print("/"); }
    | F
+```
    
-terminais
+*terminais*
+
+```
 F -> id { Print(id + "@"); }
    | num { Print(num); }
-   | E
-
+   | (E)
+```
+   
 ### Eliminando recursividade à esquerda
-A -> A a | ß, Se torna:
+```
+A -> A a | B, Se torna:
 
-A -> ß A'
+A -> B A'
 A' -> a A' | e
+```
 
 ### Gramática sem recursividade à esquerda
 
+```
 A -> id { Print( id ); } = E { Print( "="); }
+	| print { Print("print #"); } F
+	
 E -> T E'
 E' -> + T { Print( "+"); } E'
     | - T { Print( "-"); } E'
     | e
+	
 T -> F T'
 T' -> * F { Print( "*"); } T'
     | / F { Print( "/"); } T'
     | e
+	
 F -> id { Print(id + "@"); }
    | num { Print( num ); }
    | ( E )
-
+```
 
 ### Rodando o código
-flex tradutor.l
 
-g++ -std=c++17 -Wall lex.yy.c -lfl -o output
+> flex tradutor.l
+> g++ -std=c++17 -Wall lex.yy.c -lfl -o output

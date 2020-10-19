@@ -21,13 +21,6 @@ int token;
 string nome_token(int);
 void casa(int);
 
-	// mapeando funcoes
-//void print();
-//typedef void (*FuncPtr)();
-//map<string, FuncPtr> Funcoes = {
-//	{"print", &print}
-//};
-
 	// metodos da gramatica
 	void A();
     void E();
@@ -50,6 +43,7 @@ QUOTE [\"]
 DOUBLE_QUOTE ({QUOTE}{QUOTE})
 STR {QUOTE}({DOUBLE_QUOTE}|\\{QUOTE}|[^\n\"])*{QUOTE}
 
+
 %%
 
 
@@ -65,11 +59,6 @@ STR {QUOTE}({DOUBLE_QUOTE}|\\{QUOTE}|[^\n\"])*{QUOTE}
 %%
 
 	// Implementação do analisador sintático
-
-// pega novo token da entrada
-int next_token() {
-  return yylex();
-}
 
 // casa com token esperado
 void casa(int esperado){
@@ -92,64 +81,36 @@ string nome_token(int token){
     }
 }
 
-int main(){
+// print message on stdout
+void showMsg(string str){
+	cout << str << " ";
+}
 
-  //token = next_token();  
-  // se token é igual a zero é o fim do programa
-  //if( token == 0 ) cout << "Sintaxe ok" << endl;
-  //else cout << "Caracteres encontrados apos o final do programa" << endl;
+int main(){
   
-  while((token = next_token()) != 0)
+  while((token = yylex()) != 0)
   {
-	//printf( "%d %s\n", token, yytext );
-	A();
+		A();
   }
-  
   
   return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// atribuicao inicial
 void A(){
     switch(token){
         case _PRINT:
             casa(_PRINT);
-            F();
-            cout << " print #";
+            E();
+            showMsg("print #");
 			break;
         
         case _ID:
-            cout << yytext;
+            cout << yytext << " ";
             casa(_ID);
             casa('=');
             E();
-            cout << " =";
-            casa(';');
+            showMsg("=");
 			break;
     }
 }
@@ -159,20 +120,15 @@ void E(){
     E_linha();
 }
 
+// operadores +-
 void E_linha(){
     switch(token){
         case '+':
-            casa('+');
-            T();
-            cout << " +";
-            E_linha();
+            casa('+'); T(); showMsg("+"); E_linha();
 			break;
 
         case '-':
-            casa('-');
-            T();
-            cout << " -";
-            E_linha();
+            casa('-'); T(); showMsg("-"); E_linha();
 			break;
     }
 }
@@ -182,43 +138,39 @@ void T(){
     T_linha();
 }
 
+// operadores * /
 void T_linha(){
     switch(token){
         case '*':
-            casa('*');
-            F();
-            cout << " *";
-            T_linha();
+            casa('*'); F(); showMsg("*"); T_linha();
 			break;
 
         case '/':
-            casa ('/');
-            F();
-            cout << " /";
-            T_linha();
+            casa ('/'); F(); showMsg("/"); T_linha();
 			break;
     }
 }
 
+// terminais
 void F(){
     switch(token){
         case _ID:
-            cout << yytext << " @";
+            showMsg((string)yytext + " @");
             casa(_ID);
 			break;
 
         case _INT:
-            cout << yytext;
+            showMsg(yytext);
             casa(_INT);
 			break;
 
         case _FLOAT:
-            cout << yytext;
+            showMsg(yytext);
             casa(_FLOAT);
 			break;
 
         case _STR:
-            cout << yytext;
+            showMsg(yytext);
             casa(_STR);
 			break;
 
