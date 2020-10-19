@@ -2,15 +2,15 @@
 
 ### Gramática utilizada
 
-*atribuição*
-
+atribuição
 ```
 A -> id { Print(id); } = E { Print("="); }
-	| print { Print("print #");} F
+	| print { Print("print #");} E
+	| id(E, E)
+	| id(E)
 ```
 
-*operadores (com precedência)*
-
+operadores (com precedência)
 ```
 E -> E + T { Print("+"); }
    | E - T { Print("-"); }
@@ -20,8 +20,7 @@ T -> T * F { Print("*"); }
    | F
 ```
    
-*terminais*
-
+terminais
 ```
 F -> id { Print(id + "@"); }
    | num { Print(num); }
@@ -40,7 +39,7 @@ A' -> a A' | e
 
 ```
 A -> id { Print( id ); } = E { Print( "="); }
-	| print { Print("print #"); } F
+	| print { Print("print #"); } E
 	
 E -> T E'
 E' -> + T { Print( "+"); } E'
@@ -58,6 +57,7 @@ F -> id { Print(id + "@"); }
 ```
 
 ### Rodando o código
-
-> flex tradutor.l
-> g++ -std=c++17 -Wall lex.yy.c -lfl -o output
+```
+flex tradutor.l
+g++ -std=c++17 -Wall lex.yy.c -lfl -o output
+```

@@ -7,13 +7,13 @@
 
 using namespace std;
 
-enum TOKEN { _ID = 256, _INT, _FLOAT, _STR, _PRINT };
+enum TOKEN { _ID = 256, _INT, _FLOAT, _STR, _PRINT};
 map<int,string> nome_tokens = {
   { _INT, "int" },
   { _FLOAT, "float" },
   { _ID, "identificador" },
   { _STR, "string" },
-  { _PRINT, "metodo print" }
+  { _PRINT, "metodo print" },
 };
 
 	// globais
@@ -106,11 +106,11 @@ void A(){
 			break;
         
         case _ID:
-            cout << yytext << " ";
-            casa(_ID);
-            casa('=');
-            E();
-            showMsg("=");
+            showMsg(yytext);
+			casa(_ID);
+			casa('=');
+			E();
+			showMsg("=");
 			break;
     }
 }
@@ -154,10 +154,26 @@ void T_linha(){
 // terminais
 void F(){
     switch(token){
-        case _ID:
-            showMsg((string)yytext + " @");
+	
+        case _ID:{
+			string tempID = (string)yytext;
             casa(_ID);
+			// se proximo token for abertura de parenteses eh chamada de funcao
+			if(*yytext == '('){
+				casa('(');
+				E();
+				// se achar virgula tem mais parametros
+				if(*yytext == ','){
+					casa(',');
+					E();
+				}
+				casa(')');
+				showMsg(tempID + " #");
+			}
+			// caso contrario eh identificador
+			else showMsg(tempID + " @");
 			break;
+		}
 
         case _INT:
             showMsg(yytext);
