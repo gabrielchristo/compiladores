@@ -6,8 +6,6 @@ atribuição
 ```
 A -> id { Print(id); } = E { Print("="); }
 	| print { Print("print #");} E
-	| id(E, E)
-	| id(E)
 ```
 
 operadores (com precedência)
@@ -25,6 +23,8 @@ terminais
 F -> id { Print(id + "@"); }
    | num { Print(num); }
    | (E)
+   | id(E, E)
+   | id(E)
 ```
    
 ### Eliminando recursividade à esquerda
@@ -53,7 +53,9 @@ T' -> * F { Print( "*"); } T'
 	
 F -> id { Print(id + "@"); }
    | num { Print( num ); }
-   | ( E )
+   | (E)
+   | id(E, E)
+   | id(E)
 ```
 
 ### Rodando o código
