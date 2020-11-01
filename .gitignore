@@ -51,5 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Lex generated files
+# Lex and Yacc generated files
 *.yy.c
+*.tab.c
