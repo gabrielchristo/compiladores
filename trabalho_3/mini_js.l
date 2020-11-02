@@ -17,6 +17,12 @@ STR {QUOTE}({DOUBLE_QUOTE}|\\{QUOTE}|[^\n\"])*{QUOTE}
 " "      { coluna++; }
 {INT}    { return token(TK_NUM); } 
 {DOUBLE} { return token(TK_NUM); }
+"<"      { return token(TK_MENOR); }
+">"      { return token(TK_MAIOR); }
+"<="     { return token(TK_MEIG); }
+">="     { return token(TK_MAIG); }
+"=="     { return token(TK_IGUAL); }
+"!="     { return token(TK_DIFF); }
 "if"     { return token(TK_IF); }
 "else"   { return token(TK_ELSE); }
 "while"  { return token(TK_WHILE); }
