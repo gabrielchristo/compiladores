@@ -22,6 +22,7 @@ void yyerror(const char *);
 strList concatena(strList a, strList b);
 strList operator+(strList a, strList b);
 strList operator+(strList a, string b);
+strList operator+(string a, strList b);
 
 string gera_label(string prefixo);
 
@@ -72,6 +73,12 @@ FLOW_CMD : TK_IF '(' R ')' BODY OPT_ELSE
 				string endwhile = gera_label("end_while");
 				$$.c = $3.c + "!" + endwhile + "?" + $5.c + (":" + endwhile);
 			}
+			
+		 | TK_FOR '(' CMD ';' R ';' A ')' BODY
+			{
+				string for_ = gera_label("for");
+				$$.c = $3.c + $5.c + "!" + for_ + "?" + $7.c + $9.c + (":"+for_);
+			}
 		 ;
 		   
 OPT_ELSE : TK_ELSE BODY  { $$ = $2; }
@@ -94,11 +101,9 @@ DECLVAR : TK_ID '=' R  { generate_var($1); $$.c = $1.c + "&" + $1.c + $3.c + "="
         | TK_ID        { generate_var($1); $$.c = $1.c + "&"; }
         ;
 
-A : TK_ID '=' A                       { check_var($1); $$.c = $1.c + $3.c + "="; }
-  | TK_ID '.' TK_ID '[' E ']' '=' A   { $$.c = $1.c + $3.c + $5.c + $8.c + "[=]" + "[=]"; }
-  | TK_ID '.' TK_ID '=' A             { $$.c = $1.c + $3.c + $5.c + "[=]"; }
-  | TK_ID '[' TK_ID ']' '=' A         { $$.c = $1.c + $3.c + $6.c + "[=]"; }
-  | R                                 { $$ = $1; }
+A : LVALUE '=' A                   { check_var($1); $$.c = $1.c + $3.c + "="; }
+  | LVALUEPROP '=' A               { $$.c = $1.c + $3.c + "[=]"; }
+  | R                              { $$ = $1; }
   ;
 
 R : E TK_MEIG E        { $$.c = $1.c + $3.c + "<="; }
@@ -110,10 +115,22 @@ R : E TK_MEIG E        { $$.c = $1.c + $3.c + "<="; }
   | E                  { $$ = $1; }
   ;
 
-E : E TK_PLUS T  { $$.c = $1.c + $3.c + "+"; }
-  | E TK_MINUS T { $$.c = $1.c + $3.c + "-"; }
-  | T            { $$ = $1; }
+E : LVALUE '=' E       { $$.c = $1.c + "@" + $3.c + "[=]"; }
+  | LVALUEPROP '=' E   { $$.c = $1.c + "[@]" + $3.c + "[=]"; }
+  | E TK_PLUS T        { $$.c = $1.c + $3.c + "+"; }
+  | E TK_MINUS T       { $$.c = $1.c + $3.c + "-"; }
+  | TK_MINUS E         { $$.c = "0" + $2.c + "-"; }
+  | LVALUE             { $$.c = $1.c + "@"; }
+  | LVALUEPROP         { $$.c = $1.c + "[@]"; }
+  | T                  { $$ = $1; }
   ;
+  
+LVALUE : TK_ID
+	   ;
+	   
+LVALUEPROP : E '[' E ']'    { $$.c = $1.c + $3.c; }
+		   | E '.' TK_ID    { $$.c = $1.c + $3.c; }
+		   ;
 
 T : T '*' F { $$.c = $1.c + $3.c + "*"; }
   | T '/' F { $$.c = $1.c + $3.c + "/"; }
@@ -143,6 +160,12 @@ strList operator+(strList a, strList b) {
 strList operator+(strList a, string b) {
   a.push_back(b);
   return a;
+}
+
+strList operator+(string a, strList b) {
+  strList c;
+  c.push_back(a);
+  return c + b;
 }
 
 void generate_var(Atributos var){

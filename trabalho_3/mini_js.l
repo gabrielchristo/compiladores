@@ -3,11 +3,7 @@ DIGITO  [0-9]
 LETRA   [A-Za-z_]
 NUM     {DIGITO}+("."{DIGITO}+)?
 ID      {LETRA}({LETRA}|{DIGITO})*
-
-/* definição de string */
-QUOTE [\"\']
-DOUBLE_QUOTE ({QUOTE}{QUOTE})
-STR {QUOTE}({DOUBLE_QUOTE}|\\{QUOTE}|[^\n\"])*{QUOTE}
+STR (\"([^\"\n]|(\\\")|\"\")+\")|(\'([^\'\n]|(\\\')|\'\')+\')
 
 %%
 
