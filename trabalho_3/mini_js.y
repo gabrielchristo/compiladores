@@ -71,7 +71,8 @@ FLOW_CMD : TK_IF '(' R ')' BODY OPT_ELSE
 		 | TK_WHILE '(' R ')' BODY
 			{
 				string endwhile = gera_label("end_while");
-				$$.c = $3.c + "!" + endwhile + "?" + $5.c + (":" + endwhile);
+				string beginwhile = gera_label("begin_while");
+				$$.c = (":" + beginwhile) + $3.c + "!" + endwhile + "?" + $5.c + beginwhile + "#" + (":" + endwhile);
 			}
 			
 		 | TK_FOR '(' CMD ';' R ';' A ')' BODY
