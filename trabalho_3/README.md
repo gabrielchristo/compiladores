@@ -2,7 +2,7 @@
 
 ```
 flex mini_js.l
-bison mini_js.y
+bison --verbose --debug mini_js.y
 g++ -Wall mini_js.tab.c -lfl -o mini
 ```
 

@@ -38,45 +38,53 @@ map<string, int> vars;
 
 %}
 
-%token TK_NUM TK_ID TK_LET TK_IF TK_ELSE TK_WHILE TK_FOR TK_STR TK_ARRAY TK_OBJECT
-%token TK_MAIOR TK_MENOR TK_MEIG TK_MAIG TK_IGUAL TK_DIFF
+%token TK_IF TK_ELSE
+%token TK_NUM TK_ID TK_LET  TK_WHILE TK_FOR TK_STR TK_ARRAY
+%token TK_PLUS TK_MINUS
+%token TK_MAIOR TK_MENOR TK_MEIG TK_MAIG TK_IGUAL TK_DIFF TK_AND TK_OR
+%token TK_OBJECT TK_OPENBRACE TK_CLOSEBRACE
 
 %start S // simbolo inicial da gramatica
-
-// nonassoc '<' '>'
-
-
-// jump/definir endereço para if
-
-/*
-if(a>b)
-  c=a;
-print(c);
-
-a@
-b@
-> !
-:end_if_1 ?
-c a@ = ^
-:end_if_1:
-c@ 1 print $
-
-*/
 
 %%
 
 S : CMDs  { print( resolve_enderecos($1.c) ); }
   ;
 
-CMDs : CMD ';' CMDs   { $$.c = $1.c + $3.c; }
-     |                { $$.c = novo; }
+CMDs : CMD ';' CMDs    { $$.c = $1.c + $3.c; }
+	 | FLOW_CMD CMDs   { $$.c = $1.c + $2.c; }
+     |                 { $$.c = novo; }
      ;
 
-CMD : A                     { $$.c = $1.c + "^"; }
-    | TK_LET DECLVARS       { $$ = $2; }
-    | TK_IF '(' R ')' CMD   { string endif = gera_label("end_if");
-                              $$.c = $3.c + "!" + endif + "?" + $5.c + (":" + endif); }
+CMD : A                        { $$.c = $1.c + "^"; }
+    | TK_LET DECLVARS          { $$ = $2; }
     ;
+	
+FLOW_CMD : TK_IF '(' R ')' BODY OPT_ELSE
+			{
+				string endif = gera_label("end_if");
+				string dps_else = gera_label("dps_else");
+				$$.c = $3.c + "!" + endif + "?" + $5.c + dps_else + "#" + (":" + endif) + $6.c + (":" + dps_else) ;
+			}
+			
+		 | TK_WHILE '(' R ')' BODY
+			{
+				string endwhile = gera_label("end_while");
+				$$.c = $3.c + "!" + endwhile + "?" + $5.c + (":" + endwhile);
+			}
+		 ;
+		   
+OPT_ELSE : TK_ELSE BODY  { $$ = $2; }
+		 |               { $$.c = novo; }
+		 ;
+	
+BODY : CMD ';'     { $$ = $1; }
+	 | BLOCK
+	 | FLOW_CMD
+	 ;
+			
+BLOCK : TK_OPENBRACE CMDs TK_CLOSEBRACE { $$ = $2; }
+	  ;
 
 DECLVARS : DECLVAR ',' DECLVARS  { $$.c = $1.c + $3.c; }
          | DECLVAR               { $$ = $1; }
@@ -86,19 +94,25 @@ DECLVAR : TK_ID '=' R  { generate_var($1); $$.c = $1.c + "&" + $1.c + $3.c + "="
         | TK_ID        { generate_var($1); $$.c = $1.c + "&"; }
         ;
 
-A : TK_ID '=' A   { check_var($1); $$.c = $1.c + $3.c + "="; }
-  | R             { $$ = $1; }
+A : TK_ID '=' A                       { check_var($1); $$.c = $1.c + $3.c + "="; }
+  | TK_ID '.' TK_ID '[' E ']' '=' A   { $$.c = $1.c + $3.c + $5.c + $8.c + "[=]" + "[=]"; }
+  | TK_ID '.' TK_ID '=' A             { $$.c = $1.c + $3.c + $5.c + "[=]"; }
+  | TK_ID '[' TK_ID ']' '=' A         { $$.c = $1.c + $3.c + $6.c + "[=]"; }
+  | R                                 { $$ = $1; }
   ;
 
-R : E TK_MENOR E       { $$.c = $1.c + $3.c + "<"; }
+R : E TK_MEIG E        { $$.c = $1.c + $3.c + "<="; }
+  | E TK_MAIG E        { $$.c = $1.c + $3.c + ">="; }
+  |	E TK_MENOR E       { $$.c = $1.c + $3.c + "<"; }
   | E TK_MAIOR E       { $$.c = $1.c + $3.c + ">"; }
   | E TK_IGUAL E       { $$.c = $1.c + $3.c + "=="; }
+  | E TK_DIFF E        { $$.c = $1.c + $3.c + "!="; }
   | E                  { $$ = $1; }
   ;
 
-E : E '+' T { $$.c = $1.c + $3.c + "+"; }
-  | E '-' T { $$.c = $1.c + $3.c + "-"; }
-  | T       { $$ = $1; }
+E : E TK_PLUS T  { $$.c = $1.c + $3.c + "+"; }
+  | E TK_MINUS T { $$.c = $1.c + $3.c + "-"; }
+  | T            { $$ = $1; }
   ;
 
 T : T '*' F { $$.c = $1.c + $3.c + "*"; }
