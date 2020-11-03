@@ -76,10 +76,11 @@ FLOW_CMD : TK_IF '(' R ')' BODY OPT_ELSE
 			}
 			
 		 | TK_FOR '(' CMD ';' R ';' A ')' BODY
-			{
-				string for_ = gera_label("for");
-				$$.c = $3.c + $5.c + "!" + for_ + "?" + $7.c + $9.c + (":"+for_);
-			}
+		  {
+		   string endfor = gera_label("end_for");
+		   string beginfor = gera_label("begin_for");
+		   $$.c = $3.c + (":" + beginfor) + $5.c + "!" + endfor + "?" + $9.c + $7.c + "^" + beginfor + "#" + (":" + endfor);
+		  }
 		 ;
 		   
 OPT_ELSE : TK_ELSE BODY  { $$ = $2; }
@@ -98,8 +99,8 @@ DECLVARS : DECLVAR ',' DECLVARS  { $$.c = $1.c + $3.c; }
          | DECLVAR               { $$ = $1; }
          ;
 
-DECLVAR : TK_ID '=' R  { generate_var($1); $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
-        | TK_ID        { generate_var($1); $$.c = $1.c + "&"; }
+DECLVAR : LVALUE '=' R  { generate_var($1); $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
+        | LVALUE        { generate_var($1); $$.c = $1.c + "&"; }
         ;
 
 A : LVALUE '=' A                   { check_var($1); $$.c = $1.c + $3.c + "="; }
@@ -116,8 +117,8 @@ R : E TK_MEIG E        { $$.c = $1.c + $3.c + "<="; }
   | E                  { $$ = $1; }
   ;
 
-E : LVALUE '=' E       { $$.c = $1.c + "@" + $3.c + "[=]"; }
-  | LVALUEPROP '=' E   { $$.c = $1.c + "[@]" + $3.c + "[=]"; }
+E : LVALUE '=' E       { $$.c = $1.c + $3.c + "=" ; }
+  | LVALUEPROP '=' E   { $$.c = $1.c + $3.c + "[=]"; }
   | E TK_PLUS T        { $$.c = $1.c + $3.c + "+"; }
   | E TK_MINUS T       { $$.c = $1.c + $3.c + "-"; }
   | TK_MINUS E         { $$.c = "0" + $2.c + "-"; }
