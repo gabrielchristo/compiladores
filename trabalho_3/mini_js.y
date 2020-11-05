@@ -40,10 +40,16 @@ map<string, int> vars;
 %}
 
 %token TK_IF TK_ELSE
-%token TK_NUM TK_ID TK_LET  TK_WHILE TK_FOR TK_STR TK_ARRAY
-%token TK_PLUS TK_MINUS
+%token TK_NUM TK_ID TK_LET TK_WHILE TK_FOR TK_STR TK_ARRAY
+%token TK_PLUS TK_MINUS TK_MULT TK_DIV
 %token TK_MAIOR TK_MENOR TK_MEIG TK_MAIG TK_IGUAL TK_DIFF TK_AND TK_OR
 %token TK_OBJECT TK_OPENBRACE TK_CLOSEBRACE
+
+%left TK_AND TK_OR
+%left TK_MAIOR TK_MENOR TK_MEIG TK_MAIG TK_IGUAL TK_DIFF 
+%left TK_PLUS TK_MINUS
+%left TK_MULT TK_DIV
+%nonassoc TK_IF TK_ELSE TK_WHILE TK_FOR
 
 %start S // simbolo inicial da gramatica
 
@@ -119,12 +125,14 @@ R : E TK_MEIG E        { $$.c = $1.c + $3.c + "<="; }
 
 E : LVALUE '=' E       { $$.c = $1.c + $3.c + "=" ; }
   | LVALUEPROP '=' E   { $$.c = $1.c + $3.c + "[=]"; }
-  | E TK_PLUS T        { $$.c = $1.c + $3.c + "+"; }
-  | E TK_MINUS T       { $$.c = $1.c + $3.c + "-"; }
+  | E TK_PLUS E        { $$.c = $1.c + $3.c + "+"; }
+  | E TK_MINUS E       { $$.c = $1.c + $3.c + "-"; }
+  | E TK_MULT E        { $$.c = $1.c + $3.c + "*"; }
+  | E TK_DIV E         { $$.c = $1.c + $3.c + "/"; }
   | TK_MINUS E         { $$.c = "0" + $2.c + "-"; }
   | LVALUE             { $$.c = $1.c + "@"; }
   | LVALUEPROP         { $$.c = $1.c + "[@]"; }
-  | T                  { $$ = $1; }
+  | F                  { $$ = $1; }
   ;
   
 LVALUE : TK_ID
@@ -133,10 +141,6 @@ LVALUE : TK_ID
 LVALUEPROP : E '[' E ']'    { $$.c = $1.c + $3.c; }
 		   | E '.' TK_ID    { $$.c = $1.c + $3.c; }
 		   ;
-
-T : T '*' F { $$.c = $1.c + $3.c + "*"; }
-  | T '/' F { $$.c = $1.c + $3.c + "/"; }
-  | F       { $$ = $1; }
 
 F : TK_ID          { $$.c = $1.c + "@"; }
   | TK_NUM         { $$.c = $1.c; }

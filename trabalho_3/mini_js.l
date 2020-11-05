@@ -3,7 +3,7 @@ DIGITO  [0-9]
 LETRA   [A-Za-z_]
 NUM     {DIGITO}+("."{DIGITO}+)?
 ID      {LETRA}({LETRA}|{DIGITO})*
-STR (\"([^\"\n]|(\\\")|\"\")+\")|(\'([^\'\n]|(\\\')|\'\')+\')
+STR     (\"([^\"\n]|(\\\")|\"\")+\")|(\'([^\'\n]|(\\\')|\'\')+\')
 
 %%
 
@@ -13,6 +13,8 @@ STR (\"([^\"\n]|(\\\")|\"\")+\")|(\'([^\'\n]|(\\\')|\'\')+\')
 {NUM}      { return token(TK_NUM); }
 "+"        { return token(TK_PLUS); }
 "-"        { return token(TK_MINUS); }
+"*"        { return token(TK_MULT); }
+"/"        { return token(TK_DIV); }
 "<="       { return token(TK_MEIG); }
 ">="       { return token(TK_MAIG); }
 "<"        { return token(TK_MENOR); }
