@@ -37,6 +37,7 @@ void generate_var(Atributos var);
 void check_var(Atributos var);
 map<string, int> vars;
 
+int argCallCounter = 0;
 int argCounter = 0;
 strList argList = {};
 strList funcSource = {};
@@ -66,7 +67,6 @@ strList tokeniza(string asmLine);
 // bloco vazio
 // unificar operadores em 1 produção
 // comando left arrow
-// global vs local vars
 
 %%
 
@@ -81,7 +81,6 @@ CMDs : CMD ';' CMDs    { $$.c = $1.c + $3.c; }
 	 
 ARGS : R ',' ARGS { $$.c = $1.c + $3.c; argCounter++;
 					// soh adiciona ao vetor de args se for um ID (volta o id e @)
-					// isso eh pq estou usando esta producao tanto para def quanto chamada de funcao
 					if($1.c.size() >= 2) argList.push_back($1.c.rbegin()[1]); }
 					
 	 | R          { $$ = $1; argCounter++;
@@ -89,6 +88,11 @@ ARGS : R ',' ARGS { $$.c = $1.c + $3.c; argCounter++;
 					
 	 |            { $$.c = novo; }
 	 ;
+	 
+ARGS_CALL : R ',' ARGS_CALL   { $$.c = $1.c + $3.c; argCallCounter++; }
+          | R                 { $$ = $1; argCallCounter++; }
+		  |                   { $$.c = novo; }
+		  ;
 
 CMD : A                        { $$.c = $1.c + "^"; }
     | TK_LET DECLVARS          { $$ = $2; }
@@ -127,10 +131,10 @@ BODY : CMD ';'     { $$ = $1; }
 	 | FLOW_CMD
 	 ;
 	 
-FUNC_CALL : LVALUE '(' ARGS ')'
+FUNC_CALL : LVALUE '(' ARGS_CALL ')'
 			{
-				$$.c = $3.c + to_string(argCounter) + $1.c + "@" + "$";
-				argCounter = 0; argList.clear();
+				$$.c = $3.c + to_string(argCallCounter) + $1.c + "@" + "$";
+				argCallCounter = 0;
 			}
 	      ;
 		  
@@ -143,7 +147,7 @@ FUNC_DECL : TK_FUNCTION LVALUE '(' ARGS ')' BLOCK
 				
 				// declaracao de parametros (variaveis locais)
 				for(int i = 0; i < argCounter; i++){
-					strList tmp = {argList.at(i), "&", argList.at(i), "arguments", "@", to_string(i), "[@]", "=", "^"};
+					strList tmp = {argList.at(argCounter-i-1), "&", argList.at(argCounter-i-1), "arguments", "@", to_string(i), "[@]", "=", "^"};
 					funcSource.insert(funcSource.end(), tmp.begin(), tmp.end());
 				}
 				
@@ -249,10 +253,11 @@ void generate_var(Atributos var){
 }
 
 void check_var(Atributos var){
-  if(vars.count(var.c.back()) == 0){
-	cout << "Erro: a variável '" << var.c.back() << "' não foi declarada." << endl;
-	exit(1);
-  }
+	
+	if(vars.count(var.c.back()) == 0){
+		cout << "Erro: a variável '" << var.c.back() << "' não foi declarada." << endl;
+		exit(1);
+	}
 }
 
 string gera_label(string prefixo){
