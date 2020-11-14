@@ -1,0 +1,43 @@
+function getNome( obj ) { return obj.nome; }
+
+function getClass( obj ) { return obj.class; }
+
+function criaAluno( nome, celular, email ) {
+  let aluno = {};
+
+  aluno.nome = nome;
+  aluno.celular = celular;
+  aluno.email = email;
+  aluno.super = prototipoAluno;
+  aluno.getNome = getNome;
+
+  return aluno;
+}
+
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+function invoke( obj, metodo ) {
+  if( toString( obj[metodo] ) == 'undefined' )
+    return obj.super[metodo]( obj.super );
+  else
+    return obj[metodo]( obj );
+}
+
+function toString( msg ) {
+  msg asm{to_string # '&retorno' @ ~};
+}
+
+let prototipoAluno = {};
+
+prototipoAluno.class = 'Classe Aluno';
+prototipoAluno.getClass = getClass;
+
+let joao = criaAluno( 'Joao', '123456', 'eu@aqui.com' );
+let maria = criaAluno( 'Maria', '123457', 'voce@la.com' );
+
+log( invoke( joao, 'getNome' ) );
+log( invoke( joao, 'getClass' ) );
+log( invoke( maria, 'getNome' ) );
+log( invoke( maria, 'getClass' ) );

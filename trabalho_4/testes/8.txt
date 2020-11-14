@@ -1,0 +1,11 @@
+function f( x ) {
+  let b = 5 * x;
+  let c = {};
+
+  c.num = b;
+  c.arr = [];
+  c.arr[1] = 0;
+  return c ;
+}
+
+let res = f( 11 );

@@ -1,0 +1,20 @@
+let console = {};
+
+function exit( n ) {
+  'Codigo de erro: ' asm{print # undefined};
+  n asm{println # undefined};
+  0 asm{.};
+}
+
+function teste( a, b, c ) {
+  exit( b );
+}
+
+let a = "Saida: ";
+let b = 3.14;
+
+console.teste = {};
+console.teste.log = [];
+console.teste.log[1] = teste;
+
+console.teste.log[1]( a, b, "5" );

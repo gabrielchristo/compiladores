@@ -1,0 +1,8 @@
+function f( x ) {
+  let b = f;
+  f = x;
+  return b;
+}
+
+let a;
+let g = f( a = [], {} );

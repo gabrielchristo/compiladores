@@ -1,0 +1,2 @@
+function sqr(x) { return x*x; }
+let a = sqr( 5.2 );

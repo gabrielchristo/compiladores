@@ -1,0 +1,5 @@
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+let r = log( 'Hello, world!' );

@@ -1,0 +1,7 @@
+function teste( a, b ) {
+  if( a > b )
+    return a;
+}
+
+let um = teste( 3, 4 ),
+    dois = teste( 4, 3 );
