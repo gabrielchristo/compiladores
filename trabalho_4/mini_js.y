@@ -38,13 +38,15 @@ void check_var(Atributos var);
 map<string, int> vars;
 
 int argCounter = 0;
-strList funcSource;
+strList argList = {};
+strList funcSource = {};
 
-strList raStack;
+string trim(string str, string charsToRemove);
+strList tokeniza(string asmLine);
 
 %}
 
-%token TK_IF TK_ELSE
+%token TK_IF TK_ELSE TK_ASM
 %token TK_NUM TK_ID TK_LET TK_WHILE TK_FOR TK_STR TK_ARRAY TK_ARROW TK_FUNCTION TK_RETURN
 %token TK_PLUS TK_MINUS TK_MULT TK_DIV TK_MODULE
 %token TK_MAIOR TK_MENOR TK_MEIG TK_MAIG TK_IGUAL TK_DIFF TK_AND TK_OR
@@ -64,9 +66,7 @@ strList raStack;
 // bloco vazio
 // unificar operadores em 1 produção
 // comando left arrow
-
 // global vs local vars
-// ender retorno
 
 %%
 
@@ -79,14 +79,21 @@ CMDs : CMD ';' CMDs    { $$.c = $1.c + $3.c; }
      |                 { $$.c = novo; }
      ;
 	 
-ARGS : R ',' ARGS { $$.c = $1.c + $3.c; argCounter++; }
-	 | R          { $$ = $1; argCounter++; }
+ARGS : R ',' ARGS { $$.c = $1.c + $3.c; argCounter++;
+					// soh adiciona ao vetor de args se for um ID (volta o id e @)
+					// isso eh pq estou usando esta producao tanto para def quanto chamada de funcao
+					if($1.c.size() >= 2) argList.push_back($1.c.rbegin()[1]); }
+					
+	 | R          { $$ = $1; argCounter++;
+					if($1.c.size() >= 2) argList.push_back($1.c.rbegin()[1]); }
+					
 	 |            { $$.c = novo; }
 	 ;
 
 CMD : A                        { $$.c = $1.c + "^"; }
     | TK_LET DECLVARS          { $$ = $2; }
 	| TK_RETURN R              { $$.c = $2.c + "'&retorno'" + "@" + "~"; }
+	| E TK_ASM                 { $$.c = $1.c + $2.c + "^"; }
     ;
 	
 FLOW_CMD : TK_IF '(' R ')' BODY OPT_ELSE
@@ -123,7 +130,7 @@ BODY : CMD ';'     { $$ = $1; }
 FUNC_CALL : LVALUE '(' ARGS ')'
 			{
 				$$.c = $3.c + to_string(argCounter) + $1.c + "@" + "$";
-				argCounter = 0;
+				argCounter = 0; argList.clear();
 			}
 	      ;
 		  
@@ -134,20 +141,20 @@ FUNC_DECL : TK_FUNCTION LVALUE '(' ARGS ')' BLOCK
 				
 				funcSource.push_back(":"+beginfunc);
 				
-				//strList tempList;
-				//for(int i = 0; i < argCounter; i++){
-				//	tempList = tempList + 
-				//}
+				// declaracao de parametros (variaveis locais)
+				for(int i = 0; i < argCounter; i++){
+					strList tmp = {argList.at(i), "&", argList.at(i), "arguments", "@", to_string(i), "[@]", "=", "^"};
+					funcSource.insert(funcSource.end(), tmp.begin(), tmp.end());
+				}
 				
-				
-				
-				
+				// inserindo bloco na string list
 				funcSource.insert(funcSource.end(), $6.c.begin(), $6.c.end());
 				
+				// retorno final de undefined
 				strList finalReturn = {"undefined", "@", "'&retorno'", "@", "~"};
 				funcSource.insert(funcSource.end(), finalReturn.begin(), finalReturn.end());
 				
-				argCounter = 0;
+				argCounter = 0; argList.clear();
 			}
 		  ;
 			
@@ -284,6 +291,28 @@ int token(int tk) {
     yylval.l = linha;
     coluna += strlen(yytext);
     return tk;
+}
+
+string trim(string str, string charsToRemove){
+	for(auto c : charsToRemove){
+		str.erase(remove(str.begin(), str.end(), c), str.end());
+	}
+	return str;
+}
+
+strList tokeniza(string asmLine){
+	strList instructions;
+	string word = "";
+	for(auto c : asmLine){
+		if(c != ' ')
+			word = word + c;
+		else {
+			instructions.push_back(word);
+			word = "";
+		}
+	}
+	instructions.push_back(word);
+	return instructions;
 }
 
 int main( int argc, char** argv ) {
