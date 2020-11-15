@@ -1,0 +1,30 @@
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+function invert( a ) {
+  let res = [];
+
+  for( let i = 0; i < a.size; i = i + 1 )
+    res[a.size-i-1] = a[i];
+
+  return res;
+}
+
+function reduce( a, f, x ) {
+  for( let i = 0; i < a.size; i = i + 1 )
+    x = f( a[i], x, i );
+
+  return x;
+}
+
+let a = [1, 2, 3, 4, 5];
+
+log( reduce( a, (x,y) => x + y, 0 ) );
+
+let b = [ x => 2*x, x => x + 1 ];
+
+let pipe = (af, x) => reduce( af, (f,x) => f(x), x );
+
+log( pipe( b, 9 ) );
+log( pipe( invert( b ), 9 ) );

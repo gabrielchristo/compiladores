@@ -1,0 +1,15 @@
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+function criaObj() {
+  return { a : [ {}, { teste: 1 }, c=24*8+1 ], b: 'nome' };
+}
+
+let obj;
+let c;
+obj = criaObj();
+
+log( obj );
+log( obj.a );
+log( obj.a[obj.a[1].teste+1] );

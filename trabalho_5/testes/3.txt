@@ -1,0 +1,8 @@
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+let console = { log: log, teste : [ 'aba', 'cate' ] };
+
+console.log( [1, 2, 3] );
+console.log( console.teste );

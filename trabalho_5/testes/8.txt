@@ -1,0 +1,11 @@
+function criaPessoa( nome, sobrenome ) {
+  return { nome: nome, sobrenome: sobrenome, nomeCompleto : pessoa => pessoa.nome + ' ' + pessoa.sobrenome };
+}
+
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+let p = criaPessoa( 'Maria', 'da Silva' );
+
+log( p.nomeCompleto( p ) );
