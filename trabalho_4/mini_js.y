@@ -37,6 +37,7 @@ void generate_var(Atributos var);
 void check_var(Atributos var);
 map<string, int> vars;
 
+bool is_function_scope = false;
 int argCallCounter = 0;
 int argCounter = 0;
 strList argList = {};
@@ -79,14 +80,14 @@ CMDs : CMD ';' CMDs    { $$.c = $1.c + $3.c; }
      |                 { $$.c = novo; }
      ;
 	 
-ARGS : R ',' ARGS { $$.c = $1.c + $3.c; argCounter++;
+ARGS : R ',' ARGS { $$.c = $1.c + $3.c; argCounter++; is_function_scope = true;
 					// soh adiciona ao vetor de args se for um ID (volta o id e @)
 					if($1.c.size() >= 2) argList.push_back($1.c.rbegin()[1]); }
 					
-	 | R          { $$ = $1; argCounter++;
+	 | R          { $$ = $1; argCounter++; is_function_scope = true;
 					if($1.c.size() >= 2) argList.push_back($1.c.rbegin()[1]); }
 					
-	 |            { $$.c = novo; }
+	 |            { $$.c = novo; is_function_scope = true; }
 	 ;
 	 
 ARGS_CALL : R ',' ARGS_CALL   { $$.c = $1.c + $3.c; argCallCounter++; }
@@ -163,7 +164,7 @@ FUNC_DECL : TK_FUNCTION LVALUE '(' ARGS ')' BLOCK
 				strList finalReturn = {"undefined", "@", "'&retorno'", "@", "~"};
 				funcSource.insert(funcSource.end(), finalReturn.begin(), finalReturn.end());
 				
-				argCounter = 0; argList.clear();
+				argCounter = 0; argList.clear(); is_function_scope = false;
 			}
 		  ;
 			
@@ -181,7 +182,7 @@ DECLVAR : LVALUE '=' R  { generate_var($1); $$.c = $1.c + "&" + $1.c + $3.c + "=
         | LVALUE        { generate_var($1); $$.c = $1.c + "&"; }
         ;
 
-A : LVALUE '=' A                   { check_var($1); $$.c = $1.c + $3.c + "="; }
+A : LVALUE '=' A                   { if(!is_function_scope) check_var($1); $$.c = $1.c + $3.c + "="; }
   | LVALUEPROP '=' A               { $$.c = $1.c + $3.c + "[=]"; }
   | R                              { $$ = $1; }
   ;
@@ -261,6 +262,7 @@ void check_var(Atributos var){
 	
 	if(vars.count(var.c.back()) == 0){
 		cout << "Erro: a variável '" << var.c.back() << "' não foi declarada." << endl;
+		//cout << "Linha " << linha << " Coluna " << coluna << endl;
 		exit(1);
 	}
 }
