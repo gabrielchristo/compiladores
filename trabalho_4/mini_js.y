@@ -136,6 +136,11 @@ FUNC_CALL : LVALUE '(' ARGS_CALL ')'
 				$$.c = $3.c + to_string(argCallCounter) + $1.c + "@" + "$";
 				argCallCounter = 0;
 			}
+		  | LVALUEPROP '(' ARGS_CALL ')'
+			{
+				$$.c = $3.c + to_string(argCallCounter) + $1.c + "[@]" + "$";
+				argCallCounter = 0;
+			}
 	      ;
 		  
 FUNC_DECL : TK_FUNCTION LVALUE '(' ARGS ')' BLOCK
@@ -207,15 +212,15 @@ LVALUE : TK_ID
 	   ;
 	   
 LVALUEPROP : E '[' E ']'    { $$.c = $1.c + $3.c; }
-		   | E '.' TK_ID    { $$.c = $1.c + $3.c; }
+		   | E '.' LVALUE   { $$.c = $1.c + $3.c; }
 		   ;
 
-F : TK_NUM         { $$.c = $1.c; }
-  | TK_STR         { $$.c = $1.c; }
-  | '(' E ')'      { $$ = $2; }
-  | TK_OBJECT      { $$.c = novo + $1.c; }
-  | TK_ARRAY       { $$.c = novo + $1.c; }
-  | FUNC_CALL
+F : TK_NUM          { $$.c = $1.c; }
+  | TK_STR          { $$.c = $1.c; }
+  | '(' E ')'       { $$ = $2; }
+  | TK_OBJECT       { $$.c = novo + $1.c; }
+  | TK_ARRAY        { $$.c = novo + $1.c; }
+  | FUNC_CALL       { $$ = $1; }
   ;
 
 %%
