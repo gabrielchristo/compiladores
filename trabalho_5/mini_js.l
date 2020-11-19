@@ -17,6 +17,7 @@ STR     (\"([^\"\n]|(\\\")|\"\")+\")|(\'([^\'\n]|(\\\')|\'\')+\')
 "/"         { return token(TK_DIV); }
 "%"         { return token(TK_MODULE); }
 "=>"        { return token(TK_ARROW); }
+"[<=]"      { return token(TK_LEFT_ARROW); }
 "<="        { return token(TK_MEIG); }
 ">="        { return token(TK_MAIG); }
 "<"         { return token(TK_MENOR); }

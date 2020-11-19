@@ -46,14 +46,16 @@ strList funcSource = {};
 string trim(string str, string charsToRemove);
 strList tokeniza(string asmLine);
 
+int literalArrayCounter = 0;
+
 %}
 
 %token TK_IF TK_ELSE TK_ASM
-%token TK_NUM TK_ID TK_LET TK_WHILE TK_FOR TK_STR TK_ARRAY TK_ARROW TK_FUNCTION TK_RETURN
+%token TK_NUM TK_ID TK_LET TK_WHILE TK_FOR TK_STR TK_ARRAY
+%token TK_ARROW TK_FUNCTION TK_RETURN TK_LEFT_ARROW
 %token TK_PLUS TK_MINUS TK_MULT TK_DIV TK_MODULE
 %token TK_MAIOR TK_MENOR TK_MEIG TK_MAIG TK_IGUAL TK_DIFF TK_AND TK_OR
 %token TK_OBJECT TK_OPENBRACE TK_CLOSEBRACE
-
 
 %nonassoc TK_MAIOR TK_MENOR TK_MEIG TK_MAIG TK_IGUAL TK_DIFF
 %nonassoc TK_IF TK_ELSE TK_WHILE TK_FOR
@@ -63,11 +65,7 @@ strList tokeniza(string asmLine);
 
 %start S // simbolo inicial da gramatica
 
-
-// TODO
-// bloco vazio
-// unificar operadores em 1 produção
-// comando left arrow
+// valor default -> se for undefined atribuo o valor default (verifico na declarao da funcao)
 
 %%
 
@@ -170,9 +168,6 @@ FUNC_DECL : TK_FUNCTION LVALUE '(' ARGS ')' BLOCK
 			
 BLOCK : TK_OPENBRACE CMDs TK_CLOSEBRACE { $$ = $2; }
 	  ;
-	  
-EMPTY_BLOCK : TK_OPENBRACE TK_CLOSEBRACE
-			;
 
 DECLVARS : DECLVAR ',' DECLVARS  { $$.c = $1.c + $3.c; }
          | DECLVAR               { $$ = $1; }
@@ -180,6 +175,28 @@ DECLVARS : DECLVAR ',' DECLVARS  { $$.c = $1.c + $3.c; }
 
 DECLVAR : LVALUE '=' R  { generate_var($1); $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
         | LVALUE        { generate_var($1); $$.c = $1.c + "&"; }
+		
+		| LVALUE '=' LVALUE TK_ARROW E
+			{
+				generate_var($1);
+				string beginfunc = gera_label("begin_func");
+				$$.c = $1.c + "&" + $1.c + "{}" + "'&funcao'" + beginfunc + "[<=]" + "=" + "^";
+						  
+				funcSource.push_back(":"+beginfunc);
+				
+				// argumentos
+				strList lambdaArgs = {$3.c.back(), "&", $3.c.back(), "arguments", "0", "[@]", "=", "^"};
+				funcSource.insert(funcSource.end(), lambdaArgs.begin(), lambdaArgs.end());
+				
+				// inserindo expressao
+				funcSource.insert(funcSource.end(), $5.c.begin(), $5.c.end());
+				
+				// retorno implicito
+				strList finalReturn = {"'&retorno'", "@", "~"};
+				funcSource.insert(funcSource.end(), finalReturn.begin(), finalReturn.end());
+			}
+		
+		
         ;
 
 A : LVALUE '=' A                   { if(!is_function_scope) check_var($1); $$.c = $1.c + $3.c + "="; }
@@ -216,12 +233,29 @@ LVALUEPROP : E '[' E ']'    { $$.c = $1.c + $3.c; }
 		   | E '.' LVALUE   { $$.c = $1.c + $3.c; }
 		   ;
 
-F : TK_NUM          { $$.c = $1.c; }
-  | TK_STR          { $$.c = $1.c; }
-  | '(' E ')'       { $$ = $2; }
-  | TK_OBJECT       { $$.c = novo + $1.c; }
-  | TK_ARRAY        { $$.c = novo + $1.c; }
-  | FUNC_CALL       { $$ = $1; }
+		   
+OBJ_MEMBERS : LVALUE ':' E ',' OBJ_MEMBERS   { $$.c = $1.c + $3.c + "[<=]" + $5.c; }
+			| LVALUE ':' E                   { $$.c = $1.c + $3.c + "[<=]"; }
+			|                                { $$.c = novo; }
+			;
+			
+ARRAY_MEMBERS : E ',' ARRAY_MEMBERS
+				{
+					$$.c = $1.c + to_string(literalArrayCounter) + "[<=]" + $3.c;
+					literalArrayCounter++;
+				}
+			  
+			  | E { literalArrayCounter++; $$.c = $1.c + to_string(literalArrayCounter) + "[<=]"; }
+			  ;
+		   
+F : TK_NUM                                   { $$.c = $1.c; }
+  | TK_STR                                   { $$.c = $1.c; }
+  | '(' E ')'                                { $$ = $2; }
+  | TK_ARRAY                                 { $$.c = novo + $1.c; }
+  | '[' ARRAY_MEMBERS ']'                    { $$ = $2; literalArrayCounter = 0; }
+  | TK_OPENBRACE OBJ_MEMBERS TK_CLOSEBRACE   { $$.c = "{}" + $2.c; }
+  | TK_OBJECT                                { $$.c = novo + $1.c; }
+  | FUNC_CALL                                { $$ = $1; }
   ;
 
 %%
