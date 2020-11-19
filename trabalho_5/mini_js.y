@@ -50,7 +50,7 @@ int literalArrayCounter = 0;
 
 %}
 
-%token TK_IF TK_ELSE TK_ASM
+%token TK_IF TK_ELSE TK_ASM TK_BOOLEAN
 %token TK_NUM TK_ID TK_LET TK_WHILE TK_FOR TK_STR TK_ARRAY
 %token TK_ARROW TK_FUNCTION TK_RETURN TK_LEFT_ARROW
 %token TK_PLUS TK_MINUS TK_MULT TK_DIV TK_MODULE
@@ -196,7 +196,28 @@ DECLVAR : LVALUE '=' R  { generate_var($1); $$.c = $1.c + "&" + $1.c + $3.c + "=
 				funcSource.insert(funcSource.end(), finalReturn.begin(), finalReturn.end());
 			}
 		
-		
+		| LVALUE '=' TK_FUNCTION '(' ARGS ')' BLOCK
+			{
+				string beginfunc = gera_label("begin_func");
+				$$.c = $1.c + "&" + $1.c + "{}" + "'&funcao'" + beginfunc + "[<=]" + "=" + "^";
+				
+				funcSource.push_back(":"+beginfunc);
+				
+				// declaracao de parametros (variaveis locais)
+				for(int i = 0; i < argCounter; i++){
+					strList tmp = {argList.at(argCounter-i-1), "&", argList.at(argCounter-i-1), "arguments", "@", to_string(i), "[@]", "=", "^"};
+					funcSource.insert(funcSource.end(), tmp.begin(), tmp.end());
+				}
+				
+				// inserindo bloco na string list
+				funcSource.insert(funcSource.end(), $7.c.begin(), $7.c.end());
+				
+				// retorno final de undefined
+				strList finalReturn = {"undefined", "@", "'&retorno'", "@", "~"};
+				funcSource.insert(funcSource.end(), finalReturn.begin(), finalReturn.end());
+				
+				argCounter = 0; argList.clear(); is_function_scope = false;
+			}
         ;
 
 A : LVALUE '=' A                   { if(!is_function_scope) check_var($1); $$.c = $1.c + $3.c + "="; }
@@ -245,6 +266,7 @@ ARRAY_MEMBERS : E ',' ARRAY_MEMBERS { $$.c = "TAG_NUM" + $1.c + "[<=]" + $3.c; }
 		   
 F : TK_NUM                                   { $$.c = $1.c; }
   | TK_STR                                   { $$.c = $1.c; }
+  | TK_BOOLEAN                               { $$.c = $1.c; }
   | '(' E ')'                                { $$ = $2; }
   | TK_ARRAY                                 { $$.c = novo + $1.c; }
   | '[' ARRAY_MEMBERS ']'                    {

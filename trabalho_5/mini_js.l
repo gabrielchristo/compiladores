@@ -33,6 +33,8 @@ STR     (\"([^\"\n]|(\\\")|\"\")+\")|(\'([^\'\n]|(\\\')|\'\')+\')
 "let"	    { return token(TK_LET); }
 "function"  { return token(TK_FUNCTION); }
 "return"    { return token(TK_RETURN); }
+"true"      { return token(TK_BOOLEAN); }
+"false"     { return token(TK_BOOLEAN); }
 "[]"        { return token(TK_ARRAY); }
 "{}"        { return token(TK_OBJECT); }
 "{"         { return token(TK_OPENBRACE); }
