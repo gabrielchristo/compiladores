@@ -239,20 +239,22 @@ OBJ_MEMBERS : LVALUE ':' E ',' OBJ_MEMBERS   { $$.c = $1.c + $3.c + "[<=]" + $5.
 			|                                { $$.c = novo; }
 			;
 			
-ARRAY_MEMBERS : E ',' ARRAY_MEMBERS
-				{
-					$$.c = $1.c + to_string(literalArrayCounter) + "[<=]" + $3.c;
-					literalArrayCounter++;
-				}
-			  
-			  | E { literalArrayCounter++; $$.c = $1.c + to_string(literalArrayCounter) + "[<=]"; }
+ARRAY_MEMBERS : E ',' ARRAY_MEMBERS { $$.c = "TAG_NUM" + $1.c + "[<=]" + $3.c; }
+			  | E { $$.c = "TAG_NUM" + $1.c + "[<=]"; }
 			  ;
 		   
 F : TK_NUM                                   { $$.c = $1.c; }
   | TK_STR                                   { $$.c = $1.c; }
   | '(' E ')'                                { $$ = $2; }
   | TK_ARRAY                                 { $$.c = novo + $1.c; }
-  | '[' ARRAY_MEMBERS ']'                    { $$ = $2; literalArrayCounter = 0; }
+  | '[' ARRAY_MEMBERS ']'                    {
+												for(int i = 0; i < $2.c.size(); i++){
+													if($2.c[i] == "TAG_NUM")
+														$2.c[i] = to_string(literalArrayCounter++);
+												}
+												$$.c = "[]" + $2.c;
+												literalArrayCounter = 0;
+											 }
   | TK_OPENBRACE OBJ_MEMBERS TK_CLOSEBRACE   { $$.c = "{}" + $2.c; }
   | TK_OBJECT                                { $$.c = novo + $1.c; }
   | FUNC_CALL                                { $$ = $1; }
